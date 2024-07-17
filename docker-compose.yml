@@ -1,0 +1,33 @@
+services:
+  app1:
+    image: ubuntu:latest
+    container_name: app1
+    networks:
+      - nat_network1
+    volumes:
+      - ./scripts/app1.sh:/usr/app1.sh
+    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/app1.sh && /usr/app1.sh", "tail -f /dev/null"]
+    tty: true
+
+  app2:
+    image: ubuntu:latest
+    container_name: app2
+    networks:
+      - nat_network2
+    volumes:
+      - ./scripts/app2.sh:/usr/app2.sh
+    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/app2.sh && /usr/app2.sh", "tail -f /dev/null"]
+    tty: true
+
+networks:
+  nat_network1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.1.0/24
+
+  nat_network2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.2.0/24
