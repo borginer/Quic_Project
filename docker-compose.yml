@@ -1,23 +1,25 @@
 services:
   app1:
-    image: ubuntu:latest
+    build: .
     container_name: app1
     networks:
       - nat_network1
     volumes:
-      - ./scripts/app1.sh:/usr/app1.sh
-    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/app1.sh && /usr/app1.sh", "tail -f /dev/null"]
+      - ./scripts/app1.py:/usr/app1.py
+    command: ["python3", "/usr/app1.py"]
     tty: true
+    stdin_open: true
 
   app2:
-    image: ubuntu:latest
+    build: .
     container_name: app2
     networks:
       - nat_network2
     volumes:
-      - ./scripts/app2.sh:/usr/app2.sh
-    entrypoint: ["/bin/bash", "-c", "chmod +x /usr/app2.sh && /usr/app2.sh", "tail -f /dev/null"]
+      - ./scripts/app2.py:/usr/app2.py
+    command: ["python3", "/usr/app2.py"]
     tty: true
+    stdin_open: true
 
 networks:
   nat_network1:
