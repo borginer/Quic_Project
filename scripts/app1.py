@@ -9,7 +9,7 @@ print("Hostname: " + hostname + "\nIP: " + ip_address)
 
 
 
-def send_message(host='app2', port=2000, message='Hello, Server!'):
+def send_message(host='172.16.2.5', port=2000, message='Hello, Server!'):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
         try:
             client_socket.connect((host, port))

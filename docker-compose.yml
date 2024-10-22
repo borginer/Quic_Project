@@ -3,7 +3,8 @@ services:
     build: .
     container_name: app1
     networks:
-      - nat_network1
+      nat_network1:
+        ipv4_address: 172.16.1.5
     command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
     tty: true
     stdin_open: true
@@ -12,7 +13,8 @@ services:
     build: .
     container_name: app2
     networks:
-      - nat_network2
+      nat_network2:
+        ipv4_address: 172.16.2.5
     command: ["python3", "/usr/app2.py", "tail -f /dev/null"]
     tty: true
     stdin_open: true
@@ -21,7 +23,8 @@ services:
     build: .
     container_name: app3
     networks:
-      - nat_network2
+      nat_network2:
+        ipv4_address: 172.16.2.6
     command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
     tty: true
     stdin_open: true
