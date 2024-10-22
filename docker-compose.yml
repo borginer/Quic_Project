@@ -4,7 +4,7 @@ services:
     container_name: app1
     networks:
       - nat_network1
-    command: ["python3", "/usr/app1.py"]
+    command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
     tty: true
     stdin_open: true
 
@@ -13,7 +13,16 @@ services:
     container_name: app2
     networks:
       - nat_network2
-    command: ["python3", "/usr/app2.py"]
+    command: ["python3", "/usr/app2.py", "tail -f /dev/null"]
+    tty: true
+    stdin_open: true
+
+  app3:
+    build: .
+    container_name: app3
+    networks:
+      - nat_network2
+    command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
     tty: true
     stdin_open: true
 
