@@ -4,8 +4,6 @@ services:
     container_name: app1
     networks:
       - nat_network1
-    volumes:
-      - ./scripts/app1.py:/usr/app1.py
     command: ["python3", "/usr/app1.py"]
     tty: true
     stdin_open: true
@@ -15,8 +13,6 @@ services:
     container_name: app2
     networks:
       - nat_network2
-    volumes:
-      - ./scripts/app2.py:/usr/app2.py
     command: ["python3", "/usr/app2.py"]
     tty: true
     stdin_open: true
