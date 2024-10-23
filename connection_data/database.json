@@ -1,0 +1,12 @@
+{
+ "bot1": {
+  "id": "98dba9d0",
+  "addr": "localhost",
+  "port": 1337
+ },
+ "bot2": {
+  "id": "b7f78dd2",
+  "addr": "localhost",
+  "port": 1337
+ }
+}
