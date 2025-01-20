@@ -1,12 +1,17 @@
 {
  "bot1": {
-  "id": "98dba9d0",
-  "addr": "localhost",
-  "port": 1337
+  "id": "08dba9d0",
+  "addr": "www.bot1.org",
+  "local_port": 1414
  },
  "bot2": {
-  "id": "b7f78dd2",
+  "id": "07f78dd2",
+  "addr": "172.16.2.6",
+  "local_port": 2222
+ },
+ "bot3": {
+  "id": "0474c6b0",
   "addr": "localhost",
-  "port": 1337
+  "local_port": 1336
  }
 }

@@ -16,21 +16,27 @@ class PathFrame:
         return self._challenge
 
     def to_bytes(self) -> bytes:
-        return struct.pack('>B8s', self.frame_type, self.challenge)
+        return struct.pack('>B8s', self._frame_type, self._challenge)
 
 
 class PathChallenge(PathFrame):
 
     def __init__(self, challenge) -> None:
         self._frame_type = QuicFrameType.PATH_CHALLENGE
-        self._challenge = challenge
+        if isinstance(challenge, int):
+            self._challenge = challenge.to_bytes(8)
+        else:
+            self._challenge = challenge
 
 
 class PathResponse(PathFrame):
 
     def __init__(self, challenge) -> None:
         self._frame_type = QuicFrameType.PATH_RESPONSE
-        self._challenge = challenge
+        if isinstance(challenge, int):
+            self._challenge = challenge.to_bytes(8)
+        else:
+            self._challenge = challenge
 
 
 def construct_frame(buffer: bytes) -> PathFrame:

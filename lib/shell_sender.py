@@ -10,9 +10,9 @@ class ShellSender:
     CERT_FILE_PATH = "lib/cert/pycacert.pem"
     SECRETS_LOG_PATH = "tls_secrets.log"
 
-    def __init__(self, addr: str, port: int) -> None:
-        self.addr = addr
-        self.port = port
+    def __init__(self, remote: dict[str, int], local_port: int) -> None:
+        self.remote = remote
+        self.local_port = local_port
 
         self.configuration = QuicConfiguration(is_client=True)
 
@@ -21,12 +21,13 @@ class ShellSender:
 
     async def send_command(self, cmd: str) -> None:
         async with connect(
-            self.addr,
-            self.port,
+            self.remote[0],
+            self.remote[1],
             configuration=self.configuration,
             session_ticket_handler=None,  # save_session_ticket,
             create_protocol=ShellSenderProtocol,
             wait_connected=False,
+            local_port=self.local_port
         ) as client:
             client = cast(ShellSenderProtocol, client)
             return await client.send(cmd)
@@ -41,10 +42,7 @@ class ShellSenderProtocol(QuicConnectionProtocol):
 
     async def send(self, cmd: str) -> str:
         # send query and wait for answer
-        # stream_id = self._quic.get_next_available_stream_id()
-        self._quic.send_stream_data(
-            self.stream_id, cmd.encode(), end_stream=True)
-        # self._quic.send_stream_data(self.stream_id, cmd.encode())
+        self._quic.send_stream_data(self.stream_id, cmd.encode(), end_stream=True)
         waiter = self._loop.create_future()
         self._ack_waiter = waiter
         self.transmit()
@@ -64,5 +62,5 @@ class ShellSenderProtocol(QuicConnectionProtocol):
 
 if __name__ == "__main__":
 
-    shell_sender = ShellSender("localhost", 1337)
+    shell_sender = ShellSender(("localhost", 1337), 1338)
     asyncio.run(shell_sender.send_command("ipconfig"))

@@ -1,33 +1,42 @@
 services:
-  app1:
+  attacker:
     build: .
-    container_name: app1
+    hostname: attacker
+    container_name: attacker
+    tty: true
+    stdin_open: true
     networks:
       nat_network1:
         ipv4_address: 172.16.1.5
-    command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
+    volumes:
+      - .:/home/usr
+# you need to run ./remote_shell manually when all other containers have started
+
+  bot1:
+    build: .
+    hostname: bot1
+    container_name: bot1
     tty: true
     stdin_open: true
+    networks:
+      nat_network1:
+        ipv4_address: 172.16.1.5
+    volumes:
+      - .:/home/usr
+    command: python3 bot.py -name bot1 -addr 172.16.1.5 -timeout 60
 
-  app2:
+  bot2:
     build: .
-    container_name: app2
+    hostname: bot2
+    container_name: bot2
+    tty: true
+    stdin_open: true
     networks:
       nat_network2:
         ipv4_address: 172.16.2.5
-    command: ["python3", "/usr/app2.py", "tail -f /dev/null"]
-    tty: true
-    stdin_open: true
-
-  app3:
-    build: .
-    container_name: app3
-    networks:
-      nat_network2:
-        ipv4_address: 172.16.2.6
-    command: ["python3", "/usr/app1.py", " tail -f /dev/null"]
-    tty: true
-    stdin_open: true
+    volumes:
+      - .:/home/usr
+    command: python3 bot.py -name bot2 -addr 172.16.2.5 -timeout 60
 
 networks:
   nat_network1:

