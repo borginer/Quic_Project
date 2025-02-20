@@ -9,7 +9,7 @@ import uuid
 
 from lib.tls_cert import generate_tls_certificate
 from lib.beacon import transmit_beacon
-from lib.shell_sender import ShellSender
+from lib.shell_sender import ShellSender, change_host_if_inside_docker
 
 
 def parse_args() -> argparse.Namespace:
@@ -133,8 +133,8 @@ class CommandParser(object):
             self.sel_bot_info = self.net_info.get_bot_info(cmd.split(' ')[1])
             print(f"Connecting to {self.sel_bot_info}")
             dest_port = await self.get_dest_port(self.sel_bot_info["id"])
-            self.shell_sender = ShellSender((self.sel_bot_info["addr"], dest_port),
-                                            self.cord_port)
+            dest_ip = change_host_if_inside_docker(self.sel_bot_info["addr"])
+            self.shell_sender = ShellSender((dest_ip, dest_port), self.cord_port)
         else:
             self.help_command()
 

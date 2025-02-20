@@ -1,10 +1,25 @@
+import os
 import asyncio
+
+from pathlib import Path
 from typing import cast
 
 from aioquic.asyncio import QuicConnectionProtocol, connect
 from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import QuicEvent, StreamDataReceived
 
+def change_host_if_inside_docker(dest_ip:str)->str:
+    """
+    To prevent from generating ssl certificate for each bot (aioquic needs url for creating connection)
+    We use the same ssl certificate in the aioquic project folder which prevents us from using any other url
+    other then "localhost" so we we edit the host file if we are in docker so we could connect to other machines
+    using localhost as replacement for the dest ip of the bot.
+    """
+    cgroup = Path('/proc/self/cgroup')
+    if Path('./dockerenv').is_file() or cgroup.is_file() and 'docker' in cgroup.read_text():
+        os.system(f"echo {dest_ip}       localhost > /etc/hosts")
+        return "localhost"
+    return dest_ip
 
 class ShellSender:
     CERT_FILE_PATH = "lib/cert/pycacert.pem"

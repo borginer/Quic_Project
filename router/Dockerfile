@@ -1,10 +1,14 @@
+# Use Ubuntu as the base image
 FROM ubuntu:latest
 
-# RUN apk add iptables dnsmasq
-RUN apt update && apt install -y iproute2 iptables dnsmasq jq netmask bsdmainutils conntrack && rm /etc/dnsmasq.conf
-#iputils-ping netcat dnsutils
+# Install dependencies (iptables and sysctl tools)
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y iproute2 inetutils-ping curl host mtr-tiny tcpdump iptables \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY ./run.sh /run.sh
-RUN chmod +x /run.sh && mkdir /data
+# Copy the startup script into the container
+COPY start_router.sh /usr/local/bin/start_router.sh
+RUN chmod +x /usr/local/bin/start_router.sh
 
-ENTRYPOINT ["/run.sh"]
+# Set entrypoint to the startup script
+ENTRYPOINT ["/usr/local/bin/start_router.sh"]

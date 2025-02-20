@@ -1,0 +1,78 @@
+services:
+
+  alice:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    hostname: alice
+    networks:
+      moon-internal:
+        ipv4_address: 172.28.0.3
+    command: >-
+      sh -c "ip route del default &&
+      ip route add default via 172.28.0.2 &&
+      tail -f /dev/null"
+
+  moon:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    hostname: moon
+    networks:
+      moon-internal:
+        ipv4_address: 172.28.0.2
+      internet:
+        ipv4_address: 172.30.0.2
+    command: >-
+      sh -c "iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source 172.30.0.2 &&
+      iptables -t nat -A PREROUTING -i eth0 -j DNAT --to-destination 172.28.0.3 &&
+      ip route add 172.29.0.0/16 via 172.30.0.4 &&
+      tail -f /dev/null"
+
+
+  sun:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    hostname: sun
+    networks:
+      sun-internal:
+        ipv4_address: 172.29.0.4
+      internet:
+        ipv4_address: 172.30.0.4
+    command: >-
+      sh -c "iptables -t nat -A POSTROUTING -o eth0 -j SNAT --to-source 172.30.0.4 &&
+      iptables -t nat -A PREROUTING -i eth0 -j DNAT --to-destination 172.29.0.5 &&
+      ip route add 172.28.0.0/16 via 172.30.0.2 &&
+      tail -f /dev/null"
+
+  bob:
+    build: .
+    cap_add:
+      - NET_ADMIN
+    hostname: bob
+    networks:
+      sun-internal:
+        ipv4_address: 172.29.0.5
+    command: >-
+      sh -c "ip route del default &&
+      ip route add default via 172.29.0.4 &&
+      tail -f /dev/null"
+
+
+networks:
+  moon-internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+  sun-internal:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+  internet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16

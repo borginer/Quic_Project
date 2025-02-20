@@ -3,50 +3,106 @@ services:
     build: .
     hostname: attacker
     container_name: attacker
-    tty: true
-    stdin_open: true
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat_network1:
-        ipv4_address: 172.16.1.5
+      internal_net_1:
+        ipv4_address: 10.0.1.5
     volumes:
       - .:/home/usr
-# you need to run ./remote_shell manually when all other containers have started
+    command: >-
+      sh -c "ip route del default &&
+      ip route add default via 10.0.1.2 &&
+      tail -f /dev/null"
+# you need to run ./remote_shell.py -cord_addr 10.0.3.5 manually when all other containers have started
 
   bot1:
     build: .
-    hostname: bot1
     container_name: bot1
-    tty: true
-    stdin_open: true
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat_network1:
-        ipv4_address: 172.16.1.5
+      internal_net_2:
+        ipv4_address: 10.0.2.5
     volumes:
       - .:/home/usr
-    command: python3 bot.py -name bot1 -addr 172.16.1.5 -timeout 60
+    command: >-
+      sh -c "ip route del default &&
+      ip route add default via 10.0.2.2 &&
+      python3 bot.py -name bot1 -addr 10.0.1.5 -cord_addr 10.0.3.5 -timeout 3600"
 
-  bot2:
+  server:
     build: .
-    hostname: bot2
-    container_name: bot2
-    tty: true
-    stdin_open: true
+    container_name: server
+    cap_add:
+      - NET_ADMIN
     networks:
-      nat_network2:
-        ipv4_address: 172.16.2.5
+      internal_net_3:
+        ipv4_address: 10.0.3.5
     volumes:
       - .:/home/usr
-    command: python3 bot.py -name bot2 -addr 172.16.2.5 -timeout 60
+    command: >-
+      sh -c "ip route del default &&
+      ip route add default via 10.0.3.2 &&
+      python3 coordination.py"
+
+  router1:
+    build: router/.
+    container_name: router1
+    cap_add:
+      - NET_ADMIN
+    networks:
+      internal_net_1:
+        ipv4_address: 10.0.1.2
+      external_net:
+        ipv4_address: 172.20.0.2
+    command: ["10.0.1.5", "172.20.0.2", "10.0.2.0/24", "172.20.0.3", "10.0.3.0/24", "172.20.0.4"]
+
+  router2:
+    build: router/.
+    container_name: router2
+    cap_add:
+      - NET_ADMIN
+    networks:
+      internal_net_2:
+        ipv4_address: 10.0.2.2
+      external_net:
+        ipv4_address: 172.20.0.3
+    command: ["10.0.2.5", "172.20.0.3", "10.0.1.0/24", "172.20.0.2", "10.0.3.0/24", "172.20.0.4"]
+
+  router3:
+    build: router/.
+    container_name: router3
+    cap_add:
+      - NET_ADMIN
+    networks:
+      internal_net_3:
+        ipv4_address: 10.0.3.2
+      external_net:
+        ipv4_address: 172.20.0.4
+    command: ["10.0.3.5", "172.20.0.4", "10.0.1.0/24", "172.20.0.2", "10.0.2.0/24", "172.20.0.3"]
 
 networks:
-  nat_network1:
+  internal_net_1:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.16.1.0/24
+        - subnet: 10.0.1.0/24
 
-  nat_network2:
+  internal_net_2:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.16.2.0/24
+        - subnet: 10.0.2.0/24
+
+  internal_net_3:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.3.0/24
+
+  external_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
