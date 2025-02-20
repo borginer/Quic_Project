@@ -1,4 +1,4 @@
-# Quic Botnet Project
+# Quic Nat Traversal Project
 
 ## Installing
 
